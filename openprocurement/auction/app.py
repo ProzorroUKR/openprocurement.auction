@@ -1,4 +1,5 @@
 from gevent import monkey
+import os
 
 monkey.patch_all()
 
@@ -73,6 +74,7 @@ def make_auctions_app(global_conf,
         'sentinel_cluster_name': sentinel_cluster_name,
         'sentinel': loads(sentinels)
     }
+    auctions_server.config['PREFIX_NEW_AUCTION'] = os.getenv('PREFIX_NEW_AUCTION', '')
 
     auctions_server.config['event_source_connection_limit'] = int(
         event_source_connection_limit

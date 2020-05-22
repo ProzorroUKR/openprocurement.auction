@@ -75,6 +75,8 @@ class AuctionsDataBridge(object):
         return self.config['main'][name]
 
     def run(self):
+        PREFIX_NEW_AUCTION = self.config_get("PREFIX_NEW_AUCTION")
+
         if self.re_planning:
             self.run_re_planning()
             return
@@ -86,17 +88,20 @@ class AuctionsDataBridge(object):
         for item in self.feeder.get_resource_items():
             # magic goes here
             feed = FeedItem(item)
-            planning = self.mapper(feed)
-            if not planning:
-                continue
-            for cmd, item_id, lot_id in planning:
-                if lot_id:
-                    LOGGER.info('Lot {} of tender {} selected for {}'.format(
-                        lot_id, item_id, cmd))
-                else:
-                    LOGGER.info('Tender {} selected for {}'.format(item_id,
-                                                                   cmd))
-                planning(cmd, item_id, lot_id=lot_id)
+            if not PREFIX_NEW_AUCTION or not feed.get("submissionMethodDetails", "").startswith(PREFIX_NEW_AUCTION):
+                planning = self.mapper(feed)
+                if not planning:
+                    continue
+                for cmd, item_id, lot_id in planning:
+                    if lot_id:
+                        LOGGER.info('Lot {} of tender {} selected for {}'.format(
+                            lot_id, item_id, cmd))
+                    else:
+                        LOGGER.info('Tender {} selected for {}'.format(item_id,
+                                                                       cmd))
+                    planning(cmd, item_id, lot_id=lot_id)
+            else:
+                LOGGER.info('Skip tender {} as that tender work with new auctions'.format(feed.get("id")))
 
     def run_re_planning(self):
         pass
